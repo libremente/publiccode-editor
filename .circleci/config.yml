@@ -34,6 +34,23 @@ jobs:
           key: v1-dependencies-{{ checksum "package.json" }}
         
       # Run linter
-      - run: yarn run lint 
+      - run: yarn lint 
       # Build 
       - run: yarn build 
+      # Check `which` 
+      - run: which rsync || sudo apt-get install rsync
+      # Add to known hosts
+      - run: mkdir -p ~/.ssh
+      - run: echo $SSH_KNOWN_HOSTS | base64 -d >> ~/.ssh/known_hosts
+      # rsync folder to nginx
+      - run: rsync --delete -avP --rsync-path="sudo -u www-data rsync" ./dist/ <target> 
+
+workflows:
+  version: 2
+  continuous-deploy:
+    jobs:
+      - build:
+          filters:
+            branches:
+              only:
+                - master
